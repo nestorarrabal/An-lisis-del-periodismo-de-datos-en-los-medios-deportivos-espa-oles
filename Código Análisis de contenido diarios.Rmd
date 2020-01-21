@@ -1,0 +1,819 @@
+---
+title: "Análisis de las piezas de datos publicadas por los medios deportivos españoles. Período 18/11/2019 - 20/12/2019"
+author: "Néstor Arrabal Martínez"
+date: "18/1/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Paso 1: Cargar los paquetes y la base de datos
+Antes de iniciar el análisis propiamente dicho, es necesario cargar varios paquetes relacionados con la transformación de datos y también descargar la base de datos, creada en formato Excel:
+
+```{r cargar los paquetes y la base de datos, warning=F, message=F}
+library(readr)
+library(readxl)
+library(rmarkdown)
+library(tidyverse)
+library(dplyr)
+
+Analisis_contenido_r <- read_excel("C:/Users/nesto/Desktop/Néstor/Estudios/UOC/Trabajo Final/Análisis de contenido/Analisis_contenido_r.xlsx", 
+                                   col_types = c("text", "text", "text", 
+                                                 "text", "numeric", "text", "text", 
+                                                 "numeric", "text", "text", "text", 
+                                                 "text", "text", "date", "text", "text"))
+```
+
+### Paso 2: Imagen general
+Para obtener una fotografía panorámica de la base de datos, agrupamos los datos por diarios y por tipología de pieza, llegando a combinar ambas variables. Incluimos un recuento del total, así como los porcentajes en relación a este total. Este proceso lo repetiremos con el resto de variables de forma casi idéntica. 
+
+```{r resumen general, message=FALSE, warning=FALSE}
+Cuenta_por_diario <- Analisis_contenido_r %>%
+  group_by(Diario) %>%
+  summarize(total=n())
+
+Cuenta_por_tipo_diario <- Analisis_contenido_r %>%
+  group_by(Diario, Tipo_de_pieza) %>%
+  summarize(total=n())
+
+Cuenta_por_tipo_diario_percent <- Cuenta_por_tipo_diario %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Cuenta_total_tipo <- Analisis_contenido_r %>%
+  group_by(Tipo_de_pieza) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+```
+
+### Paso 3: Autoría de las piezas
+Siguiendo la misma práctica, pasamos a analizar el perfil de autoría de las piezas, fijándonos en su relación con los diarios y la tipología de las informaciones.
+
+```{r autoría, warning=FALSE, message=FALSE}
+
+Autoria_general <- Analisis_contenido_r %>%
+  group_by(Perfil_del_autor) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Autoria_diarios <- Analisis_contenido_r %>%
+  group_by(Diario, Perfil_del_autor) %>%
+  summarize(total=n())
+
+Autoria_piezas <- Analisis_contenido_r %>%
+  group_by(Tipo_de_pieza,Perfil_del_autor) %>%
+  summarize(total=n())
+
+Autoria_piezas_per <- Analisis_contenido_r %>%
+  group_by(Tipo_de_pieza,Perfil_del_autor) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Autoria_percent_tipo_pieza <- Analisis_contenido_r %>% 
+  group_by(Diario,Perfil_del_autor, Tipo_de_pieza) %>% 
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+```
+
+### Paso 4: Análisis de fechas
+La variable de fecha de publicación de las piezas puede darnos pistas de algunas rutinas de trabajo de los diarios. La combinamos con la tipología de las piezas. Nos interesa sobre todo agrupar aquellas piezas distintas a lo que son los "artículos de datos" (la tipología más numerosa), así que aplicamos el filtro.   
+
+```{r fechas, warning=FALSE, message=FALSE}
+
+Cuenta_total_fechas <- Analisis_contenido_r %>%
+  group_by(Fecha) %>%
+  summarize(total=n()) 
+
+Cuenta_total_fechas_percent <- Analisis_contenido_r %>%
+  group_by(Fecha) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Cuenta_fechas_diarios <- Analisis_contenido_r %>%
+  group_by(Diario,Fecha) %>%
+  summarize(total=n())
+
+Cuenta_fechas_diarios_percent <- Analisis_contenido_r %>%
+  group_by(Diario,Fecha) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Cuenta_fechas_art_total <- Analisis_contenido_r %>% 
+  group_by(Fecha, Tipo_de_pieza=="Artículo de datos") %>%
+  summarize(total=n())
+Cuenta_fechas_art_percent <- Analisis_contenido_r %>% 
+  group_by(Fecha, Tipo_de_pieza=="Artículo de datos") %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+```
+
+### Paso 5: Deportes más usuales
+Si bien la disciplina deportiva de las piezas no es una variable indispensable para nuestro estudio, podemos analizar su relación con el resto de variables.
+
+```{r deportes, warning=FALSE, message=FALSE}
+
+Deportes <- Analisis_contenido_r %>%
+  group_by(Deporte) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Deportes_diario <- Analisis_contenido_r %>%
+  group_by(Diario, Deporte) %>%
+  summarize(total=n())
+
+Deportes_diario_percent <- Analisis_contenido_r %>%
+  group_by(Diario, Deporte) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Deportes_tipo_de_pieza <- Analisis_contenido_r %>%
+  group_by(Deporte, Tipo_de_pieza) %>%
+  summarize(total=n())
+
+Deportes_tipo_de_pieza_per <- Analisis_contenido_r %>%
+  group_by(Deporte, Tipo_de_pieza) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+```
+
+### Paso 6: Visualizaciones
+Iniciamos el análisis de los elementos gráficos que acompañan a las informaciones y que, con el análisis del tipo de soporte en el que se publican las piezas complementa el estudio de la interactividad. Nos fijamos en la relación entre el número de visualizaciones, los diarios y la tipología de la pieza.
+
+```{r visualizaciones, warning=FALSE, message=FALSE}
+
+Cuenta_total_visualizaciones <- Analisis_contenido_r %>% 
+  group_by(Número_de_visualizaciones_label) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Cuenta_visualizaciones_tipo_de_pieza_total <- Analisis_contenido_r %>% 
+  group_by(Tipo_de_pieza,Número_de_visualizaciones_label) %>%
+  summarize(total=n())
+
+Cuenta_visualizaciones_tipo_de_pieza_percent <- Analisis_contenido_r %>% 
+  group_by(Tipo_de_pieza,Número_de_visualizaciones_label) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Cuenta_total_visualizaciones_diario <- Analisis_contenido_r %>% 
+  group_by(Diario,Número_de_visualizaciones_label) %>%
+  summarize(total=n())
+
+Cuenta_total_visualizaciones_diario_percent <- Analisis_contenido_r %>% 
+  group_by(Diario,Número_de_visualizaciones_label) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+
+
+```
+
+### Paso 7: Formatos de publicación
+La variable "soporte" nos indica si las piezas se han publicado en papel o en versión digital. Incluimos en este análisis la relación del soporte con los elementos visuales, los diarios y la tipología de piezas.
+
+```{r soporte, warning=FALSE, message=FALSE}
+Cuenta_total_soporte <- Analisis_contenido_r %>% 
+  group_by(Soporte) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Soporte_diario <- Analisis_contenido_r %>% 
+  group_by(Diario,Soporte) %>%
+  summarize(total=n())
+
+Soporte_diario_percent <- Analisis_contenido_r %>% 
+  group_by(Diario,Soporte) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Soporte_tipo_de_pieza <- Analisis_contenido_r %>% 
+  group_by(Diario,Soporte, Tipo_de_pieza) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+tipo_de_pieza_soporte <- Analisis_contenido_r %>% 
+  group_by(Diario,Tipo_de_pieza, Soporte) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+visualizaciones_soporte_total <- Analisis_contenido_r %>%
+  group_by(Soporte,Número_de_visualizaciones_label) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+visualizaciones_soporte_percent <- Analisis_contenido_r %>%
+  group_by(Soporte,Número_de_visualizaciones_label) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+visualizaciones_soporte_diarios <- Analisis_contenido_r %>%
+  group_by(Diario,Soporte,Número_de_visualizaciones_label) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+```
+
+### Paso 8. Análisis de la interactividad
+Para poder abordar este paso, primero debemos filtrar la base de datos y quedarnos tan solo con aquellas piezas que cuentan con una versión digital. A partir de este filtro previo ya podemos realizar el resto del análisis, incorporando también un análisis del porcentaje de interactividad de las piezas que cuentan con, al menos, una visualización de datos.
+
+```{r interactividad, warning=FALSE, message= FALSE}
+Total_interactividad <-Analisis_contenido_r %>% 
+  filter(Soporte %in% c("Digital","Papel y digital")) %>% 
+  group_by(Interactividad) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+interactividad_visualizaciones_total <- Analisis_contenido_r %>% 
+  filter(Soporte %in% c("Digital","Papel y digital")) %>% 
+  filter(Número_de_visualizaciones_label!="Ninguna") %>% 
+  group_by(Diario, Interactividad) %>%
+  summarize(total=n())
+
+interactividad_visualizaciones_percent <- Analisis_contenido_r %>% 
+  filter(Soporte %in% c("Digital","Papel y digital")) %>% 
+  filter(Número_de_visualizaciones_label!="Ninguna") %>% 
+  group_by(Diario, Interactividad) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+num_visualizaciones_piezas_digitales <- Analisis_contenido_r %>% 
+  filter(Soporte %in% c("Digital","Papel y digital")) %>% 
+  group_by(Número_de_visualizaciones_label) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+num_visualizaciones_piezas_digitales_diario <- Analisis_contenido_r %>% 
+  filter(Soporte!="Papel") %>% 
+  group_by(Diario,Número_de_visualizaciones_label) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+num_visualizaciones_piezas_papel <- Analisis_contenido_r %>% 
+  filter(Soporte=="Papel") %>% 
+  group_by(Número_de_visualizaciones_label) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+num_visualizaciones_piezas_papel_diario <- Analisis_contenido_r %>% 
+  filter(Soporte=="Papel") %>% 
+  group_by(Diario,Número_de_visualizaciones_label) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+interactividad_visualizaciones_autoria <- Analisis_contenido_r %>% 
+  filter(Soporte %in% c("Digital","Papel y digital")) %>% 
+  filter(Número_de_visualizaciones_label!="Ninguna") %>% 
+  group_by(Diario, Interactividad, Perfil_del_autor) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+interactividad_diarios_total <- Analisis_contenido_r %>% 
+  filter(Soporte %in% c("Digital","Papel y digital")) %>% 
+  group_by(Diario,Interactividad) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+interactividad_diarios_per <- Analisis_contenido_r %>% 
+  filter(Soporte %in% c("Digital","Papel y digital")) %>% 
+  group_by(Diario,Interactividad) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+interactividad_piezas <- Analisis_contenido_r %>% 
+  filter(Soporte %in% c("Digital","Papel y digital")) %>%  
+  group_by(Tipo_de_pieza,Interactividad) %>%
+  summarize(total=n())
+
+interactividad_piezas_per <- Analisis_contenido_r %>% 
+  filter(Soporte %in% c("Digital","Papel y digital")) %>%  
+  group_by(Tipo_de_pieza,Interactividad) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+interactividad_piezas_diarios <- Analisis_contenido_r %>% 
+  filter(Soporte %in% c("Digital","Papel y digital")) %>%  
+  group_by(Diario,Tipo_de_pieza,Interactividad) %>%
+  summarize(total=n())
+
+interactividad_soporte <- Analisis_contenido_r %>% 
+  filter(Soporte %in% c("Digital","Papel y digital")) %>% 
+  group_by(Soporte,Interactividad) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+```
+
+### Paso 9. Número de fuentes de datos
+En la base de datos tenemos dos variables relacionados con el uso de las fuentes de datos por parte de los diarios: "Número_de_fuentes_label" y "Tipo_de_fuente". Empezaremos analizando la primera. 
+
+```{r fuentes general, warning=FALSE, message= FALSE}
+
+Cuenta_total_fuentes <- Analisis_contenido_r %>% 
+  group_by(Número_de_fuentes_label) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Cuenta_fuentes_tipo_de_pieza <- Analisis_contenido_r %>% 
+  group_by(Número_de_fuentes_label, Tipo_de_pieza) %>%
+  summarize(total=n()) 
+
+Cuenta_fuentes_tipo_de_pieza_percent <- Analisis_contenido_r %>% 
+  group_by(Tipo_de_pieza,Número_de_fuentes_label) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Cuenta_total_fuentes_diario <- Analisis_contenido_r %>% 
+  group_by(Diario,Número_de_fuentes_label) %>%
+  summarize(total=n())
+
+Cuenta_total_fuentes_diario_percent <- Analisis_contenido_r %>% 
+  group_by(Diario,Número_de_fuentes_label) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+```
+
+### Paso 10: Tipo de fuentes de datos
+Una vez analizada el número de fuentes usadas, pasamos a fijarnos en la tipología de estas fuentes.
+
+```{r tipos de fuente, warning=FALSE, message= FALSE}
+cuenta_general_tipo_de_fuente <- Analisis_contenido_r %>% 
+  group_by(Tipo_de_fuente) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Cuenta_tipo_fuente_tipo_de_pieza <- Analisis_contenido_r %>% 
+  group_by(Tipo_de_fuente, Tipo_de_pieza) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+tipo_de_fuente_diarios_general_per <- Analisis_contenido_r %>%
+  group_by(Diario,Tipo_de_fuente) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+tipo_de_fuente_diarios_general <- Analisis_contenido_r %>%
+  group_by(Diario,Tipo_de_fuente) %>%
+  summarize(total=n())
+
+```
+
+### Paso 11: Fuentes de datos atribuidas
+Los análisis anteriores han mostrado que la gran mayoría de las piezas no atribuye sus fuentes de datos, hecho que limita el análisis. Por eso mismo, si queremos profundizar en la relación entre las fuentes usadas y otras variables antes hay que aplicar un filtro para quedarnos solo con las informaciones que indiquen el origen de los datos.
+
+```{r fuentes atribuidas, warning=FALSE, message= FALSE}
+cuenta_número_fuente_atribuida <- Analisis_contenido_r %>%
+  filter(Tipo_de_fuente!="Ninguna") %>% 
+  group_by(Número_de_fuentes_label) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+cuenta_tipo_fuente_atribuida <- Analisis_contenido_r %>%
+  filter(Tipo_de_fuente!="Ninguna") %>% 
+  group_by(Tipo_de_fuente) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+cuenta_total_tipo_de_fuente_atribuida <- Analisis_contenido_r %>%
+  filter(Tipo_de_fuente!="Ninguna") %>% 
+  group_by(Tipo_de_fuente) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Tipo_de_pieza_tipo_de_fuente_total_atribuida <- Analisis_contenido_r %>%
+  filter(Tipo_de_fuente!="Ninguna") %>% 
+  group_by(Tipo_de_pieza, Tipo_de_fuente) %>%
+  summarize(total=n())
+
+Tipo_de_pieza_tipo_de_fuente_percent_atribuida <- Analisis_contenido_r %>%
+  filter(Tipo_de_fuente!="Ninguna") %>% 
+  group_by(Tipo_de_pieza, Tipo_de_fuente) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+cuenta_total_tipo_de_fuente_número_fuente_per_atribuida <- Analisis_contenido_r %>%
+  filter(Tipo_de_fuente!="Ninguna") %>% 
+  group_by(Tipo_de_fuente, Número_de_fuentes_label) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+cuenta_total_número_fuente_tipo_de_fuente_per_atribuida <- Analisis_contenido_r %>%
+  filter(Tipo_de_fuente!="Ninguna") %>% 
+  group_by(Número_de_fuentes_label,Tipo_de_fuente) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+tipo_de_fuente_diarios_total_atribuida <- Analisis_contenido_r %>%
+  filter(Tipo_de_fuente!="Ninguna") %>% 
+  group_by(Diario,Tipo_de_fuente) %>%
+  summarize(total=n())
+
+tipo_de_fuente_diarios_per_atribuida <- Analisis_contenido_r %>%
+  filter(Tipo_de_fuente!="Ninguna") %>% 
+  group_by(Diario,Tipo_de_fuente) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+num_fuente_diarios_atribuidas <- Analisis_contenido_r %>%
+  filter(Número_de_fuentes_label!="No se indica") %>% 
+  group_by(Diario,Número_de_fuentes_label) %>%
+  summarize(total=n())
+
+num_fuente_diarios_atribuidas_per <- Analisis_contenido_r %>%
+  filter(Tipo_de_fuente!="Ninguna") %>% 
+  group_by(Diario,Número_de_fuentes_label) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+```
+
+### Paso 12: Análisis del Clásico
+El gran evento deportivo recogido en la base de datos es el Clásico de fútbol entre Barça y Madrid. Para comprobar si se realizó una cobertura especial, tenemos que crear dos bases de datos distintas y compararlas: una con las piezas del Clásico y otra con el resto de informaciones.
+
+```{r crear base de datos clásico, warning=FALSE, message=FALSE}
+
+Cuenta_total_clásico <- Analisis_contenido_r %>% 
+  filter(Clásico=="Sí") 
+
+Cuenta_total_sin_clásico <- Analisis_contenido_r %>% 
+  filter(Clásico=="No")
+
+```
+
+Una vez creadas las dos bases de datos, ya podemos realizar el análisis de las piezas del Clásico...
+
+```{r análisis piezas del clásico, warning=FALSE, message=FALSE}
+Clásico_diario <- Cuenta_total_clásico %>% 
+  group_by(Diario) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Clásico_tipos <- Cuenta_total_clásico %>% 
+  group_by(Diario, Tipo_de_pieza) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Clásico_tipos_total <- Cuenta_total_clásico %>% 
+  group_by(Tipo_de_pieza) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Clásico_autoria <- Cuenta_total_clásico %>% 
+  group_by(Perfil_del_autor) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Clásico_visualizaciones <- Cuenta_total_clásico %>% 
+  group_by(Diario, Número_de_visualizaciones_label) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Clásico_interactividad <- Cuenta_total_clásico %>% 
+  filter(Soporte %in% c("Digital","Papel y digital")) %>%  
+  group_by(Diario, Interactividad) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+clasico_tipo_fuentes <- Cuenta_total_clásico %>%
+  filter(Tipo_de_fuente!="Ninguna") %>% 
+  group_by(Tipo_de_fuente) %>% 
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+clasico_número_fuentes <- Cuenta_total_clásico %>%
+  group_by(Número_de_fuentes_label) %>% 
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+clasico_número_visualizaciones <- Cuenta_total_clásico %>%
+  group_by(Número_de_visualizaciones_label) %>% 
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+clasico_número_visualizaciones_diario <- Cuenta_total_clásico %>%
+  group_by(Diario,Número_de_visualizaciones_label) %>% 
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+clasico_soporte <- Cuenta_total_clásico %>%
+  group_by(Soporte) %>% 
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+clasico_soporte_diario <- Cuenta_total_clásico %>%
+  group_by(Diario,Soporte) %>% 
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+```
+
+Y también del resto de piezas: 
+
+```{r análisis resto de piezas, warning=FALSE, message=FALSE}
+sin_clasico_soporte <- Cuenta_total_sin_clásico %>%
+  group_by(Soporte) %>% 
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+sin_clasico_soporte_diario <- Cuenta_total_sin_clásico %>%
+  group_by(Diario,Soporte) %>% 
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Sin_Clásico_diario <- Cuenta_total_sin_clásico %>% 
+  group_by(Diario) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Sin_Clásico_tipos_total <- Cuenta_total_sin_clásico %>% 
+  group_by(Tipo_de_pieza) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Sin_Clásico_tipos_diarios_total <- Cuenta_total_sin_clásico %>% 
+  group_by(Diario, Tipo_de_pieza) %>%
+  summarize(total=n()) 
+
+Sin_Clásico_tipos_diarios_percent <- Cuenta_total_sin_clásico %>% 
+  group_by(Diario, Tipo_de_pieza) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+sin_clasico_número_visualizaciones<- Cuenta_total_sin_clásico %>%
+  group_by(Número_de_visualizaciones_label) %>% 
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+sin_clasico_número_visualizaciones_diario <- Cuenta_total_sin_clásico %>%
+  group_by(Diario,Número_de_visualizaciones_label) %>% 
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+Sin_Clásico_interactividad <- Cuenta_total_sin_clásico %>% 
+  filter(Soporte %in% c("Digital","Papel y digital")) %>%  
+  group_by(Diario, Interactividad) %>%
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+sin_clasico_tipo_fuentes <- Cuenta_total_sin_clásico %>%
+  filter(Tipo_de_fuente!="Ninguna") %>% 
+  group_by(Tipo_de_fuente) %>% 
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+sin_clasico_número_fuentes <- Cuenta_total_sin_clásico %>%
+  group_by(Número_de_fuentes_label) %>% 
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+sin_clasico_autoría <- Cuenta_total_sin_clásico %>%
+  group_by(Perfil_del_autor) %>% 
+  summarize(total=n()) %>% 
+  mutate(percent=total/sum(total, na.rm=T)*100)
+
+```
+
+### Paso 13: Pasar a formato "ancho"
+Nuestro análisis ya ha concluido, pero ahora debemos convertir las tablas creadas en un formato adecuado para que puedan ser leídas por la mayoría de programas de visualización de datos. Para ello, hay que pasar la tabla al formato "ancho" con la función "spread" y sustituir los valores sin datos (NA's) por 0.
+
+```{r paso a formato ancho, warning=FALSE, message=FALSE}
+
+Autoria_general_wide <- spread(Autoria_general,Perfil_del_autor,total)
+Autoria_general_wide[is.na(Autoria_general_wide)] <- 0
+
+Cuenta_por_tipo_diario_wide <- spread(Cuenta_por_tipo_diario,Tipo_de_pieza,total)
+Cuenta_por_tipo_diario_wide[is.na(Cuenta_por_tipo_diario_wide)] <- 0
+
+Cuenta_total_fuentes_diario_wide <- spread(Cuenta_total_fuentes_diario,Número_de_fuentes_label,total)
+Cuenta_total_fuentes_diario_wide[is.na(Cuenta_total_fuentes_diario_wide)] <- 0
+
+Cuenta_total_visualizaciones_diario_wide <-spread(Cuenta_total_visualizaciones_diario,Número_de_visualizaciones_label,total)
+Cuenta_total_visualizaciones_diario_wide[is.na(Cuenta_total_visualizaciones_diario_wide)] <- 0
+
+Deportes_diario_wide <- spread(Deportes_diario,Deporte,total)
+Deportes_diario_wide[is.na(Deportes_diario_wide)] <- 0
+
+Soporte_diario_wide <- spread(Soporte_diario,Soporte,total)
+Soporte_diario_wide[is.na(Soporte_diario_wide)] <- 0
+
+interactividad_piezas_wide <- spread(interactividad_piezas,Interactividad,total)
+interactividad_piezas_wide[is.na(interactividad_piezas_wide)] <- 0
+
+
+Cuenta_fuentes_tipo_de_pieza_wide <- spread(Cuenta_fuentes_tipo_de_pieza,Número_de_fuentes_label,total)
+Cuenta_fuentes_tipo_de_pieza_wide[is.na(Cuenta_fuentes_tipo_de_pieza_wide)] <- 0
+
+interactividad_visualizaciones_total_wide <- spread(interactividad_visualizaciones_total,Interactividad,total)
+interactividad_visualizaciones_total_wide[is.na(interactividad_visualizaciones_total_wide)] <- 0
+
+Tipo_de_pieza_tipo_de_fuente_total_atribuida_wide <- spread(Tipo_de_pieza_tipo_de_fuente_total_atribuida, Tipo_de_fuente,total)
+Tipo_de_pieza_tipo_de_fuente_total_atribuida_wide[is.na(Tipo_de_pieza_tipo_de_fuente_total_atribuida_wide)] <- 0
+
+Deportes_tipo_de_pieza_wide <- spread(Deportes_tipo_de_pieza, Tipo_de_pieza,total)
+Deportes_tipo_de_pieza_wide[is.na(Deportes_tipo_de_pieza_wide)] <- 0
+
+
+visualizaciones_soporte_total_wide <- spread(visualizaciones_soporte_total,Número_de_visualizaciones_label,total)
+Deportes_diario_wide[is.na(Deportes_diario_wide)] <- 0
+
+Cuenta_visualizaciones_tipo_de_pieza_total_wide <- spread(Cuenta_visualizaciones_tipo_de_pieza_total,Número_de_visualizaciones_label,total)
+Cuenta_visualizaciones_tipo_de_pieza_total_wide[is.na(Cuenta_visualizaciones_tipo_de_pieza_total_wide)] <- 0
+
+Cuenta_visualizaciones_tipo_de_pieza_total_wide <- spread(Cuenta_visualizaciones_tipo_de_pieza_total,Número_de_visualizaciones_label,total)
+Cuenta_visualizaciones_tipo_de_pieza_total_wide[is.na(Cuenta_visualizaciones_tipo_de_pieza_total_wide)] <- 0
+
+Cuenta_fechas_diarios_wide <- spread(Cuenta_fechas_diarios,Fecha,total)
+Cuenta_fechas_diarios_wide[is.na(Cuenta_fechas_diarios_wide)] <- 0
+
+interactividad_diarios_total_wide <- spread(interactividad_diarios_total,Interactividad,total)
+interactividad_diarios_total_wide[is.na(interactividad_diarios_total_wide)] <- 0
+
+tipo_de_fuente_diarios_total_atribuida_wide <- spread(tipo_de_fuente_diarios_total_atribuida,Tipo_de_fuente,total)
+tipo_de_fuente_diarios_total_atribuida_wide[is.na(tipo_de_fuente_diarios_total_atribuida_wide)] <- 0
+
+Cuenta_fechas_art_total_wide <- spread(Cuenta_fechas_art_total,Fecha,total)
+Cuenta_fechas_art_total_wide[is.na(Cuenta_fechas_art_total_wide)] <- 0
+
+Autoria_diarios_wide <- spread(Autoria_diarios,Perfil_del_autor,total)
+Autoria_diarios_wide[is.na(Autoria_diarios_wide)] <- 0
+
+Autoria_piezas_wide <- spread(Autoria_piezas,Perfil_del_autor,total)
+Autoria_piezas_wide[is.na(Autoria_piezas_wide)] <- 0
+
+num_fuente_diarios_atribuidas_wide <- spread(num_fuente_diarios_atribuidas,Número_de_fuentes_label,total)
+num_fuente_diarios_atribuidas_wide[is.na(num_fuente_diarios_atribuidas_wide)] <- 0
+
+```
+
+Las tablas que tienen porcentajes presentan una disficultad añadida, ya que cuentan con una variable más que impide transformarlas directamente a un formato ancho. Tendremos que realizar un paso previa que consiste en eliminar la columna del "total" antes de repetir el procedimiento del resto de tablas.
+
+```{r pasar a ancho dataframes con porcentaje, warning=FALSE, message=FALSE}
+Autoria_percent_wide <- subset(Autoria_general, select = -c(total) )
+Autoria_percent_wide <- spread(Autoria_percent_wide,Perfil_del_autor,percent)
+Autoria_percent_wide[is.na(Autoria_percent_wide)] <- 0
+
+Autoria_percent_tipo_wide <- subset(Autoria_percent_tipo_pieza, select = -c(total) )
+Autoria_percent_tipo_wide <- spread(Autoria_percent_tipo_wide,Perfil_del_autor,percent)
+Autoria_percent_tipo_wide[is.na(Autoria_percent_tipo_wide)] <- 0
+
+Cuenta_por_tipo_diario_percent_wide <- subset(Cuenta_por_tipo_diario_percent, select = -c(total) )
+Cuenta_por_tipo_diario_percent_wide <- spread(Cuenta_por_tipo_diario_percent_wide,Tipo_de_pieza,percent)
+Cuenta_por_tipo_diario_percent_wide[is.na(Cuenta_por_tipo_diario_percent_wide)] <- 0
+
+Cuenta_total_fuentes_diario_percent_wide <- subset(Cuenta_total_fuentes_diario_percent, select = -c(total) )
+Cuenta_total_fuentes_diario_percent_wide <- spread(Cuenta_total_fuentes_diario_percent_wide,Número_de_fuentes_label,percent)
+Cuenta_total_fuentes_diario_percent_wide[is.na(Cuenta_total_fuentes_diario_percent_wide)] <- 0
+
+Cuenta_total_visualizaciones_diario_percent_wide <- subset(Cuenta_total_visualizaciones_diario_percent, select = -c(total) )
+Cuenta_total_visualizaciones_diario_percent_wide <- spread(Cuenta_total_visualizaciones_diario_percent_wide,Número_de_visualizaciones_label,percent)
+Cuenta_total_visualizaciones_diario_percent_wide[is.na(Cuenta_total_visualizaciones_diario_percent_wide)] <- 0
+
+Deportes_diario_percent_wide <- subset(Deportes_diario_percent, select = -c(total) )
+Deportes_diario_percent_wide <- spread(Deportes_diario_percent_wide,Deporte,percent)
+Deportes_diario_percent_wide[is.na(Deportes_diario_percent_wide)] <- 0
+
+Tipo_de_pieza_tipo_de_fuente_atribuida_percent_wide <- subset(
+Tipo_de_pieza_tipo_de_fuente_percent_atribuida, select = -c(total) )
+Tipo_de_pieza_tipo_de_fuente_atribuida_percent_wide <- spread(Tipo_de_pieza_tipo_de_fuente_atribuida_percent_wide,Tipo_de_fuente,percent)
+Tipo_de_pieza_tipo_de_fuente_atribuida_percent_wide[is.na(Tipo_de_pieza_tipo_de_fuente_atribuida_percent_wide)] <- 0
+
+Soporte_diario_percent_wide <- subset(Soporte_diario_percent, select = -c(total) )
+Soporte_diario_percent_wide <- spread(Soporte_diario_percent_wide,Soporte,percent)
+Soporte_diario_percent_wide[is.na(Soporte_diario_percent_wide)] <- 0
+
+visualizaciones_soporte_percent_wide <- subset(visualizaciones_soporte_percent, select = -c(total) )
+visualizaciones_soporte_percent_wide <- spread(visualizaciones_soporte_percent_wide,Número_de_visualizaciones_label,percent)
+visualizaciones_soporte_percent_wide[is.na(visualizaciones_soporte_percent_wide)] <- 0
+
+Cuenta_fuentes_tipo_de_pieza_percent_wide <- subset(Cuenta_fuentes_tipo_de_pieza_percent, select = -c(total) )
+Cuenta_fuentes_tipo_de_pieza_percent_wide <- spread(Cuenta_fuentes_tipo_de_pieza_percent_wide,Número_de_fuentes_label,percent)
+Cuenta_fuentes_tipo_de_pieza_percent_wide[is.na(Cuenta_fuentes_tipo_de_pieza_percent_wide)] <- 0
+
+interactividad_visualizaciones_percent_wide <- subset(interactividad_visualizaciones_percent, select = -c(total) )
+interactividad_visualizaciones_percent_wide <- spread(interactividad_visualizaciones_percent_wide,Interactividad,percent)
+interactividad_visualizaciones_percent_wide[is.na(interactividad_visualizaciones_percent_wide)] <- 0
+
+Cuenta_visualizaciones_tipo_de_pieza_percent_wide <- subset(Cuenta_visualizaciones_tipo_de_pieza_percent, select = -c(total) )
+Cuenta_visualizaciones_tipo_de_pieza_percent_wide <- spread(Cuenta_visualizaciones_tipo_de_pieza_percent_wide,Tipo_de_pieza,percent)
+Cuenta_visualizaciones_tipo_de_pieza_percent_wide[is.na(Cuenta_visualizaciones_tipo_de_pieza_percent_wide)] <- 0
+
+Deportes_tipo_de_pieza_per_wide <- subset(Deportes_tipo_de_pieza_per, select = -c(total) )
+Deportes_tipo_de_pieza_per_wide <- spread(Deportes_tipo_de_pieza_per_wide,Tipo_de_pieza,percent)
+Deportes_tipo_de_pieza_per_wide[is.na(Deportes_tipo_de_pieza_per_wide)] <- 0
+
+interactividad_piezas_per_wide <- subset(interactividad_piezas_per, select = -c(total) )
+interactividad_piezas_per_wide <- spread(interactividad_piezas_per_wide,Interactividad,percent)
+interactividad_piezas_per_wide[is.na(interactividad_piezas_per_wide)] <- 0
+
+interactividad_diarios_per_wide <- subset(interactividad_diarios_per, select = -c(total) )
+interactividad_diarios_per_wide <- spread(interactividad_diarios_per_wide,Interactividad,percent)
+interactividad_diarios_per_wide[is.na(interactividad_diarios_per_wide)] <- 0
+
+Autoria_piezas_per_wide <- subset(Autoria_piezas_per, select = -c(total) )
+Autoria_piezas_per_wide <- spread(Autoria_piezas_per_wide,Tipo_de_pieza,percent)
+Autoria_piezas_per_wide[is.na(Autoria_piezas_per_wide)] <- 0
+
+tipo_de_fuente_diarios_per_atribuida_wide <- subset(tipo_de_fuente_diarios_per_atribuida, select = -c(total) )
+tipo_de_fuente_diarios_per_atribuida_wide <- spread(tipo_de_fuente_diarios_per_atribuida_wide,Tipo_de_fuente,percent)
+tipo_de_fuente_diarios_per_atribuida_wide[is.na(tipo_de_fuente_diarios_per_atribuida_wide)] <- 0
+
+num_fuente_diarios_atribuidas_per_wide <- subset(num_fuente_diarios_atribuidas_per, select = -c(total) )
+num_fuente_diarios_atribuidas_per_wide <- spread(num_fuente_diarios_atribuidas_per_wide,Número_de_fuentes_label,percent)
+num_fuente_diarios_atribuidas_per_wide[is.na(num_fuente_diarios_atribuidas_per_wide)] <- 0
+
+Cuenta_fechas_art_percent_wide <- subset(Cuenta_fechas_art_percent, select = -c(total) )
+Cuenta_fechas_art_percent_wide <- spread(Cuenta_fechas_art_percent_wide,Fecha,percent)
+Cuenta_fechas_art_percent_wide[is.na(Cuenta_fechas_art_percent_wide)] <- 0
+
+num_visualizaciones_piezas_digitales_wide <- subset(num_visualizaciones_piezas_digitales, select = -c(total) )
+num_visualizaciones_piezas_digitales_wide <- spread(num_visualizaciones_piezas_digitales_wide,Número_de_visualizaciones_label,percent)
+num_visualizaciones_piezas_digitales_wide[is.na(num_visualizaciones_piezas_digitales_wide)] <- 0
+
+num_visualizaciones_piezas_papel_wide <- subset(num_visualizaciones_piezas_papel, select = -c(total) )
+num_visualizaciones_piezas_papel_wide <- spread(num_visualizaciones_piezas_papel_wide,Número_de_visualizaciones_label,percent)
+num_visualizaciones_piezas_papel_wide[is.na(num_visualizaciones_piezas_papel_wide)] <- 0
+
+Clásico_tipos_percent_wide <- subset(Clásico_tipos, select = -c(total) )
+Clásico_tipos_percent_wide <- spread(Clásico_tipos_percent_wide ,Diario,percent)
+Clásico_tipos_percent_wide[is.na(Clásico_tipos_percent_wide )] <- 0
+
+num_visualizaciones_piezas_digitales_diario_wide <- subset(num_visualizaciones_piezas_digitales_diario, select = -c(total) )
+num_visualizaciones_piezas_digitales_diario_wide <-spread(num_visualizaciones_piezas_digitales_diario_wide,Número_de_visualizaciones_label,percent)
+num_visualizaciones_piezas_digitales_diario_wide[is.na(num_visualizaciones_piezas_digitales_diario_wide)] <- 0
+
+
+```
+
+### Paso 14: Exportar a CSV
+Para obtener las tablas en archivos es necesario exportarlas a CSV, indicando el nombre que queremos que tenga el archivo.
+
+```{r crear archivos de datos para exportar, warning=FALSE, message=FALSE}
+setwd("C:/Users/nesto/Desktop/Néstor/Estudios/UOC/Trabajo Final/Análisis de contenido/Excels para gráficos")
+
+write_csv(Autoria_general_wide, "Autoria_def.csv")
+write_csv(Autoria_percent_wide, "Autoria_perc_def.csv")
+write_csv(Autoria_percent_tipo_wide, "Autoria_per_per_tipo.csv")
+write_csv(Cuenta_fechas_diarios_wide, "cuenta_fechas_diario_def.csv")
+write_csv(Cuenta_fuentes_tipo_de_pieza_percent_wide, "cuenta_fuentes_tipo_percent.csv")
+write_csv(Cuenta_fuentes_tipo_de_pieza_wide, "cuenta_fuentes_tipo_percent.csv")
+write_csv(Cuenta_por_tipo_diario_wide, "cuenta_por_tipo.csv")
+write_csv(Cuenta_por_tipo_diario_percent_wide, "cuenta_por_tipo_per.csv")
+write_csv(Cuenta_total_fuentes_diario_wide, "cuenta_fuentes_diario.csv")
+write_csv(Cuenta_total_fuentes_diario_percent_wide, "cuenta_fuentes_diario_per.csv")
+write_csv(Cuenta_total_visualizaciones_diario_wide, "cuenta_visualizaciones_diario.csv")
+write_csv(Cuenta_total_visualizaciones_diario_percent_wide, "cuenta_visualizaciones_diario_per.csv")
+write_csv(Cuenta_visualizaciones_tipo_de_pieza_total_wide, "cuenta_visualizaciones_tipo.csv")
+write_csv(Cuenta_visualizaciones_tipo_de_pieza_percent_wide, "cuenta_visualizaciones_tipo_per.csv")
+write_csv(Deportes_diario_percent_wide, "deportes_diario_per.csv")
+write_csv(Deportes_diario_wide, "deportes_diario.csv")
+write_csv(Deportes_tipo_de_pieza_wide, "deportes_pieza.csv")
+write_csv(Deportes_tipo_de_pieza_per_wide, "deportes_pieza_per.csv")
+write_csv(interactividad_visualizaciones_percent_wide, "interactividad_visualizaciones_per.csv")
+write_csv(interactividad_visualizaciones_total_wide, "interactividad_visualizaciones_total.csv")
+write_csv(Soporte_diario_wide, "soporte_diario.csv")
+write_csv(Soporte_diario_percent_wide, "soporte_diario_per.csv")
+write_csv(Tipo_de_pieza_tipo_de_fuente_total_atribuida_wide, "tipo_de_pieza_fuente.csv")
+write_csv(Tipo_de_pieza_tipo_de_fuente_atribuida_percent_wide, "tipo_de_pieza_fuente_per.csv")
+write_csv(visualizaciones_soporte_percent_wide, "visualizaciones_soporte_per.csv")
+write_csv(visualizaciones_soporte_total_wide, "visualizaciones_soporte_total.csv")
+write_csv(Cuenta_por_diario, "cuenta_por_diario.csv")
+write_csv(interactividad_piezas_per_wide, "interactividad_piezas_per.csv")
+write_csv(interactividad_piezas_wide, "interactividad_piezas.csv")
+write_csv(interactividad_diarios_per_wide, "interactividad_diarios_per.csv")
+write_csv(interactividad_diarios_total_wide, "interactividad_diarios_total.csv")
+write_csv(tipo_de_fuente_diarios_per_atribuida_wide, "tipo_de_fuente_diarios_per.csv")
+write_csv(tipo_de_fuente_diarios_total_atribuida_wide, "tipo_de_fuente_diarios.csv")
+write_csv(num_fuente_diarios_atribuidas_wide, "num_fuente_diarios_atribuidas.csv")
+write_csv(num_fuente_diarios_atribuidas_per_wide, "num_fuente_diarios_atribuidas_per.csv")
+write_csv(Cuenta_fechas_art_total_wide, "cuenta_fechas_art.csv")
+write_csv(Cuenta_fechas_art_percent_wide, "cuenta_fechas_art_per.csv")
+write_csv(Clásico_tipos_total, "clásico_tipos.csv")
+write_csv(Sin_Clásico_tipos_total, "sin_clásico_tipos.csv")
+write_csv(Clásico_tipos, "clásico_tipos_percent.csv")
+write_csv(Clásico_interactividad,"clásico_interactividad.csv")
+write_csv(Sin_Clásico_interactividad, "sin_clásico_interactividad.csv")
+write_csv(clasico_tipo_fuentes, "clasico_tipo_fuentes.csv")
+write_csv(sin_clasico_tipo_fuentes, "sin_clasico_tipo_fuentes.csv")
+write_csv(sin_clasico_número_visualizaciones, "sin_clasico_num_visualizaciones.csv")
+write_csv(clasico_número_visualizaciones, "clasico_num_visualizaciones.csv")
+write_csv(interactividad_piezas_diarios, "interactividad_piezas_diarios.csv")
+write_csv(interactividad_piezas, "interactividad_piezas.csv")
+write_csv(Autoria_general, "Autoria_general.csv")
+write_csv(Autoria_diarios_wide, "Autoria_diarios.csv")
+write_csv(Autoria_piezas_wide, "Autoria_piezas.csv")
+write_csv(Autoria_piezas_per_wide, "Autoria_piezas_per.csv")
+write_csv(Clásico_autoria, "clasico_autoria.csv")
+write_csv(sin_clasico_autoría, "sin_clasico_autoria.csv")
+write_csv(num_visualizaciones_piezas_digitales_wide, "visualizaciones_piezas_digitales.csv")
+write_csv(num_visualizaciones_piezas_papel_wide, "visualizaciones_piezas_papel.csv")
+write_csv(num_visualizaciones_piezas_digitales, "visualizaciones_piezas_digitales_nowide.csv")
+write_csv(Clásico_tipos_percent_wide, "clásico_tipos_diario.csv")
+write_csv(num_visualizaciones_piezas_digitales_diario_wide, "num_visualiz_digitales_diario.csv")
+
+
+```
+
