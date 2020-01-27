@@ -1,4 +1,4 @@
-# Análisis del periodismo de datos en los medios deportivos españoles
+# Análisis de la situación del periodismo de datos en los medios deportivos españoles
 En el reportaje <a href="https://medium.com/@arrabalnestor/la-quimera-del-periodismo-de-datos-deportivo-en-espana-cb40f1b375aa" target="_blank">'La quimera del periodismo de datos deportivo en España'</a> hemos analizado la situación del periodismo de datos en los principales medios deportivos españoles: <em>As</em>, <em>Marca</em>, <em>Mundo Deportivo</em> y <em>Sport</em>.
 El punto de partida de esta investigación ha sido el estudio de todas las piezas de datos publicadas por estos cuatro diarios durante el período comprendido entre el 18/11/2019 y el 20/12/2019. Los resultados de esta observación se han recogido en <a href="https://github.com/nestorarrabal/analisis-del-periodismo-de-datos-en-los-medios-deportivos-espanoles/blob/master/Analisis_contenido_r.xlsx" target="_blank">una base de datos en formato Excel</a>.
 
